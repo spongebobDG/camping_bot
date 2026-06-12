@@ -1,0 +1,180 @@
+ackermann_udp_bridge:
+  ros__parameters:
+    esp32_ip: "192.168.0.10"
+    command_port: 12347
+    wheel_base: 0.20
+    max_linear_mps: 0.60
+    min_drive_linear_mps: 0.32
+    max_steering_rad: 0.60
+    command_timeout_sec: 0.60
+
+udp_imu_node:
+  ros__parameters:
+    bind_ip: "0.0.0.0"
+    imu_port: 12348
+    frame_id: "imu_link"
+
+esp32_status_node:
+  ros__parameters:
+    bind_ip: "0.0.0.0"
+    status_port: 12349
+
+esp32_camera_monitor:
+  ros__parameters:
+    enabled: true
+    mode: "udp"
+    bind_ip: "0.0.0.0"
+    status_port: 12350
+    stream_url: "http://192.168.0.11/status"
+    timeout_sec: 2.5
+    check_period_sec: 2.0
+    stale_sec: 8.0
+
+robot_health_monitor:
+  ros__parameters:
+    imu_topic: "/imu/data_raw"
+    scan_topic: "/scan_viz"
+    cmd_topic: "/cmd_vel_executed"
+    esp32_status_topic: "/esp32/status"
+    warn_after_sec: 1.0
+
+hazard_monitor:
+  ros__parameters:
+    scan_topic: "/scan_viz"
+    imu_topic: "/imu/data_raw"
+    front_angle_deg: 45.0
+    close_obstacle_m: 0.45
+    critical_obstacle_m: 0.22
+    buzzer_on_close_obstacle: true
+    tilt_warn_deg: 18.0
+    tilt_critical_deg: 28.0
+    enable_tilt_detection: true
+    tilt_calibration_samples: 40
+    tilt_min_accel_mps2: 6.0
+    tilt_max_accel_mps2: 14.0
+    scan_timeout_sec: 3.0
+    imu_timeout_sec: 3.0
+    publish_hz: 2.0
+
+mission_supervisor:
+  ros__parameters:
+    camera_timeout_sec: 5.0
+    esp32_timeout_sec: 3.0
+    hazard_timeout_sec: 3.0
+    weak_rssi: -75
+    esp32_reboot_warn_sec: 30.0
+    publish_hz: 1.0
+
+mission_command_node:
+  ros__parameters:
+    allow_patrol_on_warn: false
+
+waypoint_patrol:
+  ros__parameters:
+    max_segment_warn_m: 6.0
+    status_hz: 1.0
+
+warning_buzzer_udp_bridge:
+  ros__parameters:
+    esp32_ip: "192.168.0.10"
+    command_port: 12347
+    repeat_hz: 2.0
+
+lds14_udp_node:
+  ros__parameters:
+    bind_ip: "0.0.0.0"
+    lidar_port: 12346
+    frame_id: "laser"
+    range_min: 0.05
+    range_max: 12.0
+    scan_size: 360
+    publish_hz: 15.0
+    status_log_hz: 1.0
+    mirror_scan: true
+
+lidar_safety_stop:
+  ros__parameters:
+    enable_forward_safety: true
+    front_angle_deg: 45.0
+    ignore_distance_below_m: 0.04
+    stop_distance_m: 0.38
+    slow_distance_m: 0.75
+    reverse_allowed: true
+    raw_cmd_timeout_sec: 0.80
+    max_reverse_seconds: 0.0
+    emergency_reverse_distance_m: 0.18
+    emergency_reverse_mps: 0.18
+    emergency_reverse_seconds: 0.45
+    emergency_turn_radps: 0.55
+
+drive_smoke_test:
+  ros__parameters:
+    linear_mps: 0.08
+    angular_radps: 0.0
+    run_seconds: 2.0
+    stop_seconds: 1.0
+
+cmd_vel_odom:
+  ros__parameters:
+    odom_frame_id: "odom"
+    base_frame_id: "base_link"
+    publish_hz: 30.0
+    min_linear_for_yaw_mps: 0.01
+    imu_topic: "/imu/data_raw"
+    use_imu_yaw: true
+    imu_timeout_sec: 0.30
+    gyro_z_sign: 1.0
+    gyro_z_deadband_radps: 0.015
+    gyro_bias_alpha: 0.02
+    linear_scale: 1.0
+
+straight_trim_test:
+  ros__parameters:
+    linear_mps: 0.32
+    run_seconds: 3.0
+    stop_seconds: 1.0
+    imu_topic: "/imu/data_raw"
+
+simple_goal_follower:
+  ros__parameters:
+    goal_topic: "/goal_pose"
+    pose_topic: "/amcl_pose"
+    cmd_topic: "/cmd_vel_raw"
+    max_linear_mps: 0.28
+    min_linear_mps: 0.18
+    max_angular_radps: 0.75
+    heading_kp: 1.4
+    goal_tolerance_m: 0.20
+    slow_radius_m: 0.70
+    max_heading_for_drive_rad: 1.2
+    command_hz: 10.0
+    allow_reverse: true
+    reverse_enter_heading_rad: 1.75
+    reverse_exit_heading_rad: 1.20
+    reverse_max_linear_mps: 0.22
+    reverse_min_linear_mps: 0.16
+    direction_switch_pause_sec: 0.50
+    use_goal_orientation: true
+    final_yaw_tolerance_rad: 0.45
+    approach_distance_m: 1.20
+    approach_tolerance_m: 0.35
+    require_final_yaw: true
+    use_swing_maneuver: true
+    swing_forward_distance_m: 0.80
+    swing_lateral_offset_m: 0.65
+    swing_tolerance_m: 0.30
+    reverse_angular_sign: -1.0
+    max_final_alignment_attempts: 3
+    parking_radius_m: 0.55
+    parking_completion_radius_m: 0.30
+    parking_drift_limit_m: 0.75
+    parking_linear_mps: 0.18
+    parking_angular_radps: 0.65
+    parking_reverse_seconds: 0.75
+    parking_forward_seconds: 0.75
+    max_parking_cycles: 0
+    parking_reverse_angular_sign: 1.0
+    parking_forward_angular_sign: 1.0
+    settle_radius_m: 0.35
+    settle_yaw_tolerance_rad: 0.4
+    settle_time_sec: 0.4  

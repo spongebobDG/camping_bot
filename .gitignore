@@ -1,0 +1,11 @@
+software/ros2_ws/build/
+software/ros2_ws/install/
+software/ros2_ws/log/
+__pycache__/
+*.py[cod]
+*.tmp
+*.bak
+*.swp
+.DS_Store
+Thumbs.db
+*.log

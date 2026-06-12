@@ -1,0 +1,26 @@
+waypoints:
+  # Replace these sample points with coordinates recorded from your saved map.
+  - name: wp_01
+    x: -0.327
+    y: -1.495
+    yaw: -0.756
+  - name: wp_02
+    x: 4.953
+    y: -5.584
+    yaw: 0.910
+  - name: wp_03
+    x: 5.865
+    y: -4.276
+    yaw: 2.361
+  - name: wp_04
+    x: -4.322
+    y: 5.631
+    yaw: -0.780
+  - name: wp_05
+    x: -5.748
+    y: 4.439
+    yaw: -0.802
+  - name: wp_06 # Back to the start
+    x: -0.327
+    y: -1.495
+    yaw: -0.756  

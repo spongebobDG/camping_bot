@@ -1,0 +1,45 @@
+map_server:
+  ros__parameters:
+    yaml_filename: "/home/spbdg/maps/camping_test_map.yaml"
+    topic_name: "map"
+    frame_id: "map"
+
+amcl:
+  ros__parameters:
+    use_sim_time: false
+    alpha1: 0.2
+    alpha2: 0.2
+    alpha3: 0.2
+    alpha4: 0.2
+    alpha5: 0.2
+    base_frame_id: "base_link"
+    odom_frame_id: "odom"
+    global_frame_id: "map"
+    scan_topic: "scan_viz"
+    robot_model_type: "nav2_amcl::DifferentialMotionModel"
+    min_particles: 500
+    max_particles: 2000
+    update_min_d: 0.10
+    update_min_a: 0.10
+    resample_interval: 1
+    transform_tolerance: 1.0
+    laser_min_range: 0.05
+    laser_max_range: 12.0
+    set_initial_pose: false
+    always_reset_initial_pose: false
+
+amcl_map_client:
+  ros__parameters:
+    use_sim_time: false
+
+amcl_rclcpp_node:
+  ros__parameters:
+    use_sim_time: false
+
+lifecycle_manager_localization:
+  ros__parameters:
+    use_sim_time: false
+    autostart: true
+    node_names:
+      - map_server
+      - amcl
