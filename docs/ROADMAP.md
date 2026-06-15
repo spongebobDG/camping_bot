@@ -74,6 +74,12 @@
   - Add better IMU yaw integration.
   - Add visual/lidar odometry if stable.
   - Move toward Nav2 once odometry is reliable enough.
+- Added Nav2 patrol launch with Regulated Pure Pursuit for map-based routing.
+- Continue tuning:
+  - costmap inflation radius
+  - robot radius
+  - lookahead distance
+  - low-speed Ackermann path following
 
 ## Stage 8: Camping Robot Features
 
@@ -88,7 +94,9 @@
   - evacuation
   - warning buzzer
   - elevator interaction
-- Add a simple command UI after navigation is stable.
+- Added first destination-task layer for delivery, guide, evacuation, and return-home.
+- Elevator interaction remains future work and needs building/elevator-specific hardware or user confirmation flow.
+- Added a local web command UI for camera, status, and mission buttons.
 
 ## Stage 9: Mission Supervisor
 
@@ -107,14 +115,17 @@
   - warning
   - stop
 - Gate commands using `/mission/level`.
-- Add a simple UI or terminal command interface.
+- Added `/mission/command`.
+- Added `/mission/task_command`.
+- Added local web control panel.
 
 ## Recommended Next Step
 
-The next engineering target is Stage 3 and Stage 4 together:
+The next engineering target is Nav2 field validation and mission coordinates:
 
-1. Load the saved map.
-2. Set the initial pose.
-3. Send a very close RViz goal.
-4. Check whether real robot movement matches RViz movement.
-5. Tune `simple_goal_follower` slowly before trying full Nav2.
+1. Put real coordinates in `mission_locations.yaml`.
+2. Launch `camping_robot_nav2_patrol.launch.py`.
+3. Set initial pose.
+4. Enable RViz displays for Plan, Global Costmap, and Local Costmap.
+5. Test patrol, delivery, guide, evacuation, and return-home.
+6. Tune Nav2 until mapped obstacles are routed around reliably.

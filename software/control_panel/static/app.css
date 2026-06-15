@@ -1,0 +1,185 @@
+:root {
+  color-scheme: dark;
+  --bg: #101612;
+  --panel: #182119;
+  --panel-2: #202b20;
+  --line: #435140;
+  --text: #eff4e9;
+  --muted: #aab6a2;
+  --ok: #7bd88f;
+  --warn: #ffd166;
+  --danger: #ff6b5f;
+  --action: #8fd6c9;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(143, 214, 201, 0.16), transparent 32rem),
+    linear-gradient(135deg, #0d130f 0%, var(--bg) 52%, #1d2419 100%);
+  color: var(--text);
+  font-family: "Segoe UI", "Noto Sans KR", sans-serif;
+}
+
+.shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 18px;
+  min-height: 100vh;
+  padding: 18px;
+}
+
+.camera-panel,
+.card {
+  border: 1px solid var(--line);
+  background: rgba(24, 33, 25, 0.92);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.34);
+}
+
+.camera-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 36px);
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.eyebrow {
+  margin: 0 0 4px;
+  color: var(--muted);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+h1,
+h2 {
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+h1 {
+  font-size: 30px;
+}
+
+h2 {
+  margin-bottom: 14px;
+  font-size: 18px;
+}
+
+.pill {
+  min-width: 96px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  text-align: center;
+  font-weight: 700;
+}
+
+.pill.ok {
+  border-color: var(--ok);
+  color: var(--ok);
+}
+
+.pill.warn {
+  border-color: var(--warn);
+  color: var(--warn);
+}
+
+.pill.danger {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+#cameraStream {
+  width: 100%;
+  flex: 1;
+  min-height: 360px;
+  object-fit: contain;
+  background: #050806;
+}
+
+.side-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.card {
+  padding: 18px;
+}
+
+.status-grid {
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr);
+  gap: 10px 12px;
+  margin: 0;
+}
+
+dt {
+  color: var(--muted);
+}
+
+dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.button-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+button {
+  min-height: 46px;
+  border: 1px solid #60705b;
+  background: var(--panel-2);
+  color: var(--text);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+button:hover {
+  border-color: var(--action);
+  color: var(--action);
+}
+
+button.warn {
+  border-color: var(--warn);
+  color: var(--warn);
+}
+
+button.danger {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.last-action {
+  margin: 14px 0 0;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 960px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .camera-panel {
+    min-height: 60vh;
+  }
+}

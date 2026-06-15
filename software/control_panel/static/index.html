@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Camping Bot Control</title>
+    <link rel="stylesheet" href="/app.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="camera-panel">
+        <div class="topbar">
+          <div>
+            <p class="eyebrow">Camping Bot</p>
+            <h1>Mission Control</h1>
+          </div>
+          <div id="levelPill" class="pill">UNKNOWN</div>
+        </div>
+        <img id="cameraStream" alt="camera stream" />
+      </section>
+
+      <section class="side-panel">
+        <div class="card">
+          <h2>Status</h2>
+          <dl class="status-grid">
+            <dt>Mission</dt>
+            <dd id="missionStatus">loading</dd>
+            <dt>Mode</dt>
+            <dd id="modeStatus">loading</dd>
+            <dt>Task</dt>
+            <dd id="taskStatus">loading</dd>
+            <dt>Hazard</dt>
+            <dd id="hazardStatus">loading</dd>
+            <dt>Camera</dt>
+            <dd id="cameraStatus">loading</dd>
+          </dl>
+        </div>
+
+        <div class="card">
+          <h2>Missions</h2>
+          <div class="button-grid">
+            <button data-command="patrol">Patrol</button>
+            <button data-command="delivery">Delivery</button>
+            <button data-command="guide">Guide</button>
+            <button data-command="evacuate">Evacuate</button>
+            <button data-command="return_home">Home</button>
+            <button data-command="next">Next</button>
+          </div>
+        </div>
+
+        <div class="card emergency">
+          <h2>Safety</h2>
+          <div class="button-grid">
+            <button class="warn" data-command="alert">Alert</button>
+            <button class="danger" data-command="stop">Stop</button>
+            <button data-command="reset_patrol">Reset Patrol</button>
+          </div>
+          <p id="lastAction" class="last-action">ready</p>
+        </div>
+      </section>
+    </main>
+    <script src="/app.js"></script>
+  </body>
+</html>
