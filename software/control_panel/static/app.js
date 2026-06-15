@@ -7,9 +7,11 @@ const fields = {
   hazard: document.querySelector("#hazardStatus"),
   camera_status: document.querySelector("#cameraStatus"),
   assistance_request: document.querySelector("#assistStatus"),
+  elevator_status: document.querySelector("#elevatorStatus"),
 };
 const lastAction = document.querySelector("#lastAction");
 const assistMessage = document.querySelector("#assistMessage");
+const elevatorMessage = document.querySelector("#elevatorMessage");
 
 let cameraUrlSet = false;
 
@@ -37,7 +39,9 @@ async function refreshStatus() {
     setText(fields.hazard, data.hazard);
     setText(fields.camera_status, data.camera_status);
     setText(fields.assistance_request, data.assistance_request);
+    setText(fields.elevator_status, data.elevator_status);
     assistMessage.textContent = data.assistance_request || "no request";
+    elevatorMessage.textContent = data.elevator_status || "phase=idle";
     if (!cameraUrlSet && data.camera_stream_url) {
       cameraStream.src = data.camera_stream_url;
       cameraUrlSet = true;
@@ -82,12 +86,35 @@ async function sendDecision(decision) {
   }
 }
 
+async function sendElevatorDecision(decision) {
+  lastAction.textContent = `sending elevator ${decision}`;
+  try {
+    const response = await fetch("/api/elevator", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ decision }),
+    });
+    const data = await response.json();
+    if (!data.ok) throw new Error(data.error || "elevator decision failed");
+    lastAction.textContent = `sent elevator ${decision}`;
+    await refreshStatus();
+  } catch (error) {
+    lastAction.textContent = `elevator error: ${error.message}`;
+  }
+}
+
 document.querySelectorAll("button[data-command]").forEach((button) => {
   button.addEventListener("click", () => sendCommand(button.dataset.command));
 });
 
 document.querySelectorAll("button[data-decision]").forEach((button) => {
   button.addEventListener("click", () => sendDecision(button.dataset.decision));
+});
+
+document.querySelectorAll("button[data-elevator]").forEach((button) => {
+  button.addEventListener("click", () =>
+    sendElevatorDecision(button.dataset.elevator)
+  );
 });
 
 refreshStatus();

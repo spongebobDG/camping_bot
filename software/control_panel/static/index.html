@@ -35,6 +35,8 @@
             <dd id="cameraStatus">loading</dd>
             <dt>Assist</dt>
             <dd id="assistStatus">loading</dd>
+            <dt>Elevator</dt>
+            <dd id="elevatorStatus">loading</dd>
           </dl>
         </div>
 
@@ -45,6 +47,7 @@
             <button data-command="delivery">Delivery</button>
             <button data-command="guide">Guide</button>
             <button data-command="evacuate">Evacuate</button>
+            <button data-command="elevator">Elevator</button>
             <button data-command="return_home">Home</button>
             <button data-command="next">Next</button>
           </div>
@@ -69,6 +72,19 @@
             <button data-decision="next">Next</button>
             <button data-decision="alert">Alert</button>
             <button class="danger" data-decision="stop">Stop</button>
+          </div>
+        </div>
+
+        <div class="card elevator">
+          <h2>Elevator</h2>
+          <p id="elevatorMessage" class="assist-message">phase=idle</p>
+          <div class="button-grid">
+            <button data-elevator="call">Call</button>
+            <button data-elevator="entered">Entered</button>
+            <button data-elevator="floor_selected">Floor Selected</button>
+            <button data-elevator="exited">Exited</button>
+            <button data-elevator="complete">Complete</button>
+            <button class="danger" data-elevator="cancel">Cancel</button>
           </div>
         </div>
       </section>

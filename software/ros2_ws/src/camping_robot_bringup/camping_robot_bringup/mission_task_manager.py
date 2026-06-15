@@ -97,6 +97,7 @@ class MissionTaskManager(Node):
             "delivery": "delivery_dropoff",
             "guide": "guide_destination",
             "evacuate": "evacuation_point",
+            "elevator": "elevator_wait",
             "return_home": "home",
             "home": "home",
         }

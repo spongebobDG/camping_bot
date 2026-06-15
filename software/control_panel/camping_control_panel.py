@@ -29,6 +29,7 @@ class TopicCache:
             "camera_online": "unknown",
             "hazard": "unknown",
             "assistance_request": "none",
+            "elevator_status": "phase=idle",
             "updated_at": 0.0,
         }
 
@@ -57,6 +58,7 @@ TOPICS = {
     "camera_online": ("/camera/online", "std_msgs/msg/Bool"),
     "hazard": ("/camping_robot/hazard", "std_msgs/msg/String"),
     "assistance_request": ("/mission/assistance_request", "std_msgs/msg/String"),
+    "elevator_status": ("/mission/elevator_status", "std_msgs/msg/String"),
 }
 
 
@@ -128,6 +130,22 @@ def publish_mission_decision(decision):
     )
 
 
+def publish_elevator_decision(decision):
+    payload = "{data: " + decision + "}"
+    run_ros_command(
+        [
+            "ros2",
+            "topic",
+            "pub",
+            "/mission/elevator_decision",
+            "std_msgs/msg/String",
+            payload,
+            "--once",
+        ],
+        timeout=5.0,
+    )
+
+
 class ControlPanelHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         path = urlparse(self.path).path
@@ -147,7 +165,7 @@ class ControlPanelHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         path = urlparse(self.path).path
-        if path not in ("/api/mission", "/api/decision"):
+        if path not in ("/api/mission", "/api/decision", "/api/elevator"):
             self.send_error(404)
             return
         length = int(self.headers.get("Content-Length", "0"))
@@ -173,6 +191,20 @@ class ControlPanelHandler(BaseHTTPRequestHandler):
                 return
 
             decision = str(data.get("decision", "")).strip().lower()
+            if path == "/api/elevator":
+                if decision not in {
+                    "call",
+                    "entered",
+                    "floor_selected",
+                    "exited",
+                    "complete",
+                    "cancel",
+                }:
+                    raise ValueError(f"unsupported elevator decision: {decision}")
+                publish_elevator_decision(decision)
+                self.write_json({"ok": True, "decision": decision})
+                return
+
             if decision not in {"wait", "retry", "next", "stop", "alert"}:
                 raise ValueError(f"unsupported decision: {decision}")
             publish_mission_decision(decision)

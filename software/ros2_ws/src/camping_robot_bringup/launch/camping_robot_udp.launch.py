@@ -83,6 +83,13 @@ def generate_launch_description():
             ),
             Node(
                 package="camping_robot_bringup",
+                executable="elevator_assist_node",
+                name="elevator_assist_node",
+                output="screen",
+                parameters=[params],
+            ),
+            Node(
+                package="camping_robot_bringup",
                 executable="mission_task_manager",
                 name="mission_task_manager",
                 output="screen",

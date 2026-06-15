@@ -93,10 +93,24 @@ class MissionCommandNode(Node):
             self.publish_status("patrol_next_waypoint")
             return
 
-        if command in ("delivery", "guide", "evacuate", "return_home", "home"):
+        if command in (
+            "delivery",
+            "guide",
+            "evacuate",
+            "return_home",
+            "home",
+            "elevator",
+            "floor_change",
+        ):
             self.pause_patrol()
             self.set_buzzer(False)
-            self.publish_task_control("return_home" if command == "home" else command)
+            if command == "home":
+                task_command = "return_home"
+            elif command == "floor_change":
+                task_command = "elevator"
+            else:
+                task_command = command
+            self.publish_task_control(task_command)
             self.mode = command
             self.publish_status(f"{command}_started")
             return

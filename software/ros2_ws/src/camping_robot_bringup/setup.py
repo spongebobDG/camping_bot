@@ -25,6 +25,7 @@ setup(
             "ackermann_udp_bridge = camping_robot_bringup.ackermann_udp_bridge:main",
             "cmd_vel_odom = camping_robot_bringup.cmd_vel_odom:main",
             "drive_smoke_test = camping_robot_bringup.drive_smoke_test:main",
+            "elevator_assist_node = camping_robot_bringup.elevator_assist_node:main",
             "esp32_camera_monitor = camping_robot_bringup.esp32_camera_monitor:main",
             "esp32_status_node = camping_robot_bringup.esp32_status_node:main",
             "hazard_monitor = camping_robot_bringup.hazard_monitor:main",

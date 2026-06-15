@@ -16,11 +16,13 @@ It can send:
 - guide
 - evacuate
 - return_home
+- elevator
 - alert
 - stop
 - next waypoint
 - reset patrol
 - obstacle assistance decisions
+- elevator assisted-flow decisions
 
 ## Run
 
@@ -79,6 +81,15 @@ Decision buttons publish to `/mission/decision`:
 - `Next`
 - `Alert`
 - `Stop`
+
+The Elevator panel publishes to `/mission/elevator_decision`:
+
+- `Call`
+- `Entered`
+- `Floor Selected`
+- `Exited`
+- `Complete`
+- `Cancel`
 
 For field testing, keep a separate terminal ready with:
 
