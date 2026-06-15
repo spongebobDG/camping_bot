@@ -69,6 +69,12 @@ mission_command_node:
   ros__parameters:
     allow_patrol_on_warn: false
 
+mission_assistance_node:
+  ros__parameters:
+    blocked_after_sec: 3.0
+    clear_after_sec: 1.5
+    publish_hz: 1.0
+
 mission_task_manager:
   ros__parameters:
     mission_locations_file: "/mnt/c/Projects/Camping_bot/software/ros2_ws/src/camping_robot_bringup/config/mission_locations.yaml"

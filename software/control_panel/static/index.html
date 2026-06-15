@@ -33,6 +33,8 @@
             <dd id="hazardStatus">loading</dd>
             <dt>Camera</dt>
             <dd id="cameraStatus">loading</dd>
+            <dt>Assist</dt>
+            <dd id="assistStatus">loading</dd>
           </dl>
         </div>
 
@@ -56,6 +58,18 @@
             <button data-command="reset_patrol">Reset Patrol</button>
           </div>
           <p id="lastAction" class="last-action">ready</p>
+        </div>
+
+        <div class="card assistance">
+          <h2>Assistance</h2>
+          <p id="assistMessage" class="assist-message">no request</p>
+          <div class="button-grid">
+            <button data-decision="wait">Wait</button>
+            <button data-decision="retry">Retry</button>
+            <button data-decision="next">Next</button>
+            <button data-decision="alert">Alert</button>
+            <button class="danger" data-decision="stop">Stop</button>
+          </div>
         </div>
       </section>
     </main>

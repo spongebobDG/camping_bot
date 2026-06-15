@@ -28,6 +28,7 @@ class TopicCache:
             "camera_status": "unknown",
             "camera_online": "unknown",
             "hazard": "unknown",
+            "assistance_request": "none",
             "updated_at": 0.0,
         }
 
@@ -55,6 +56,7 @@ TOPICS = {
     "camera_status": ("/camera/status", "std_msgs/msg/String"),
     "camera_online": ("/camera/online", "std_msgs/msg/Bool"),
     "hazard": ("/camping_robot/hazard", "std_msgs/msg/String"),
+    "assistance_request": ("/mission/assistance_request", "std_msgs/msg/String"),
 }
 
 
@@ -110,6 +112,22 @@ def publish_mission_command(command):
     )
 
 
+def publish_mission_decision(decision):
+    payload = "{data: " + decision + "}"
+    run_ros_command(
+        [
+            "ros2",
+            "topic",
+            "pub",
+            "/mission/decision",
+            "std_msgs/msg/String",
+            payload,
+            "--once",
+        ],
+        timeout=5.0,
+    )
+
+
 class ControlPanelHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         path = urlparse(self.path).path
@@ -129,28 +147,36 @@ class ControlPanelHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         path = urlparse(self.path).path
-        if path != "/api/mission":
+        if path not in ("/api/mission", "/api/decision"):
             self.send_error(404)
             return
         length = int(self.headers.get("Content-Length", "0"))
         body = self.rfile.read(length).decode("utf-8")
         try:
             data = json.loads(body or "{}")
-            command = str(data.get("command", "")).strip().lower()
-            if command not in {
-                "patrol",
-                "delivery",
-                "guide",
-                "evacuate",
-                "return_home",
-                "alert",
-                "stop",
-                "next",
-                "reset_patrol",
-            }:
-                raise ValueError(f"unsupported command: {command}")
-            publish_mission_command(command)
-            self.write_json({"ok": True, "command": command})
+            if path == "/api/mission":
+                command = str(data.get("command", "")).strip().lower()
+                if command not in {
+                    "patrol",
+                    "delivery",
+                    "guide",
+                    "evacuate",
+                    "return_home",
+                    "alert",
+                    "stop",
+                    "next",
+                    "reset_patrol",
+                }:
+                    raise ValueError(f"unsupported command: {command}")
+                publish_mission_command(command)
+                self.write_json({"ok": True, "command": command})
+                return
+
+            decision = str(data.get("decision", "")).strip().lower()
+            if decision not in {"wait", "retry", "next", "stop", "alert"}:
+                raise ValueError(f"unsupported decision: {decision}")
+            publish_mission_decision(decision)
+            self.write_json({"ok": True, "decision": decision})
         except Exception as exc:
             self.write_json({"ok": False, "error": str(exc)}, status=400)
 

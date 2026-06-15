@@ -20,6 +20,7 @@ It can send:
 - stop
 - next waypoint
 - reset patrol
+- obstacle assistance decisions
 
 ## Run
 
@@ -67,6 +68,17 @@ export CAMPING_CAMERA_STREAM_URL=http://192.168.0.11/stream
 This panel uses `ros2 topic echo --once` and `ros2 topic pub` internally, so it
 should be started from a terminal where ROS2 and the Camping Bot workspace have
 already been sourced.
+
+When the robot is blocked by an obstacle during a mission, the Assistance panel
+shows the request from `/mission/assistance_request`.
+
+Decision buttons publish to `/mission/decision`:
+
+- `Wait`
+- `Retry`
+- `Next`
+- `Alert`
+- `Stop`
 
 For field testing, keep a separate terminal ready with:
 

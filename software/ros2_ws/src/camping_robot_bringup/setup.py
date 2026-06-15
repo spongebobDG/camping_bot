@@ -31,6 +31,7 @@ setup(
             "lidar_safety_stop = camping_robot_bringup.lidar_safety_stop:main",
             "lds14_udp_node = camping_robot_bringup.lds14_udp_node:main",
             "mission_supervisor = camping_robot_bringup.mission_supervisor:main",
+            "mission_assistance_node = camping_robot_bringup.mission_assistance_node:main",
             "mission_command_node = camping_robot_bringup.mission_command_node:main",
             "mission_task_manager = camping_robot_bringup.mission_task_manager:main",
             "robot_health_monitor = camping_robot_bringup.robot_health_monitor:main",

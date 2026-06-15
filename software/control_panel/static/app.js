@@ -6,8 +6,10 @@ const fields = {
   mission_task_status: document.querySelector("#taskStatus"),
   hazard: document.querySelector("#hazardStatus"),
   camera_status: document.querySelector("#cameraStatus"),
+  assistance_request: document.querySelector("#assistStatus"),
 };
 const lastAction = document.querySelector("#lastAction");
+const assistMessage = document.querySelector("#assistMessage");
 
 let cameraUrlSet = false;
 
@@ -34,6 +36,8 @@ async function refreshStatus() {
     setText(fields.mission_task_status, data.mission_task_status);
     setText(fields.hazard, data.hazard);
     setText(fields.camera_status, data.camera_status);
+    setText(fields.assistance_request, data.assistance_request);
+    assistMessage.textContent = data.assistance_request || "no request";
     if (!cameraUrlSet && data.camera_stream_url) {
       cameraStream.src = data.camera_stream_url;
       cameraUrlSet = true;
@@ -61,8 +65,29 @@ async function sendCommand(command) {
   }
 }
 
+async function sendDecision(decision) {
+  lastAction.textContent = `sending decision ${decision}`;
+  try {
+    const response = await fetch("/api/decision", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ decision }),
+    });
+    const data = await response.json();
+    if (!data.ok) throw new Error(data.error || "decision failed");
+    lastAction.textContent = `sent decision ${decision}`;
+    await refreshStatus();
+  } catch (error) {
+    lastAction.textContent = `decision error: ${error.message}`;
+  }
+}
+
 document.querySelectorAll("button[data-command]").forEach((button) => {
   button.addEventListener("click", () => sendCommand(button.dataset.command));
+});
+
+document.querySelectorAll("button[data-decision]").forEach((button) => {
+  button.addEventListener("click", () => sendDecision(button.dataset.decision));
 });
 
 refreshStatus();
