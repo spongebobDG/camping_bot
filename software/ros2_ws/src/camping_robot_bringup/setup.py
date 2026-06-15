@@ -34,6 +34,7 @@ setup(
             "mission_supervisor = camping_robot_bringup.mission_supervisor:main",
             "mission_assistance_node = camping_robot_bringup.mission_assistance_node:main",
             "mission_command_node = camping_robot_bringup.mission_command_node:main",
+            "mission_event_logger = camping_robot_bringup.mission_event_logger:main",
             "mission_task_manager = camping_robot_bringup.mission_task_manager:main",
             "robot_health_monitor = camping_robot_bringup.robot_health_monitor:main",
             "simple_goal_follower = camping_robot_bringup.simple_goal_follower:main",
