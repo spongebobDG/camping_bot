@@ -69,6 +69,13 @@ mission_command_node:
   ros__parameters:
     allow_patrol_on_warn: false
 
+mission_task_manager:
+  ros__parameters:
+    mission_locations_file: "/mnt/c/Projects/Camping_bot/software/ros2_ws/src/camping_robot_bringup/config/mission_locations.yaml"
+    navigation_mode: "auto"
+    goal_topic: "/goal_pose"
+    allow_on_warn: false
+
 waypoint_patrol:
   ros__parameters:
     max_segment_warn_m: 6.0

@@ -148,6 +148,7 @@ class SimpleGoalFollower(Node):
         self.status_pub = self.create_publisher(String, "simple_goal/status", 10)
         self.create_subscription(PoseStamped, goal_topic, self.on_goal, 10)
         self.create_subscription(PoseWithCovarianceStamped, pose_topic, self.on_pose, 10)
+        self.create_subscription(String, "simple_goal/cancel", self.on_cancel, 10)
         self.create_timer(1.0 / command_hz, self.control)
 
         self.goal = None
@@ -182,6 +183,21 @@ class SimpleGoalFollower(Node):
             f"yaw={goal_yaw:.2f}, phase={self.phase}"
         )
         self.publish_status("active")
+
+    def on_cancel(self, msg: String):
+        command = msg.data.strip().lower()
+        if command not in ("cancel", "stop", "reset"):
+            return
+        self.goal = None
+        self.drive_direction = 1
+        self.pause_until = None
+        self.phase = "idle"
+        self.parking_phase_until = None
+        self.goal_completed = False
+        self.settle_start_time = None
+        self.cmd_pub.publish(Twist())
+        self.publish_status("cancelled")
+        self.get_logger().info("Goal cancelled")
 
     def on_pose(self, msg: PoseWithCovarianceStamped):
         self.pose = msg

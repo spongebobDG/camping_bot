@@ -20,6 +20,8 @@ class MissionCommandNode(Node):
         self.patrol_control_pub = self.create_publisher(
             String, "waypoint_patrol/control", 10
         )
+        self.task_control_pub = self.create_publisher(String, "mission/task_command", 10)
+        self.simple_cancel_pub = self.create_publisher(String, "simple_goal/cancel", 10)
         self.buzzer_pub = self.create_publisher(Bool, "warning_buzzer", 10)
         self.stop_pub = self.create_publisher(Twist, "cmd_vel_raw", 10)
 
@@ -42,6 +44,7 @@ class MissionCommandNode(Node):
         if command in ("idle", "stop", "pause"):
             self.stop_robot()
             self.pause_patrol()
+            self.cancel_task()
             self.set_buzzer(False)
             self.mode = "idle"
             self.publish_status("stopped")
@@ -50,6 +53,7 @@ class MissionCommandNode(Node):
         if command == "alert":
             self.stop_robot()
             self.pause_patrol()
+            self.cancel_task()
             self.set_buzzer(True)
             self.mode = "alert"
             self.publish_status("alert_buzzer_on")
@@ -89,11 +93,12 @@ class MissionCommandNode(Node):
             self.publish_status("patrol_next_waypoint")
             return
 
-        if command in ("delivery", "guide", "evacuate"):
-            self.stop_robot()
+        if command in ("delivery", "guide", "evacuate", "return_home", "home"):
             self.pause_patrol()
+            self.set_buzzer(False)
+            self.publish_task_control("return_home" if command == "home" else command)
             self.mode = command
-            self.publish_status(f"{command}_not_ready")
+            self.publish_status(f"{command}_started")
             return
 
         self.publish_status(f"unknown_command_{command}")
@@ -108,8 +113,19 @@ class MissionCommandNode(Node):
         msg.data = command
         self.patrol_control_pub.publish(msg)
 
+    def publish_task_control(self, command):
+        msg = String()
+        msg.data = command
+        self.task_control_pub.publish(msg)
+
     def pause_patrol(self):
         self.publish_patrol_control("pause")
+
+    def cancel_task(self):
+        self.publish_task_control("cancel")
+        msg = String()
+        msg.data = "cancel"
+        self.simple_cancel_pub.publish(msg)
 
     def stop_robot(self):
         msg = Twist()

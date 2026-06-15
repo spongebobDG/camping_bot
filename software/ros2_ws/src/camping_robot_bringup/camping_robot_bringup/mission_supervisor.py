@@ -40,6 +40,7 @@ class MissionSupervisor(Node):
         self.hazard_time = None
         self.simple_goal_status = "idle"
         self.patrol_status = "idle"
+        self.task_status = "idle"
         self.last_summary = None
 
         self.status_pub = self.create_publisher(String, "mission/status", 10)
@@ -50,6 +51,7 @@ class MissionSupervisor(Node):
         self.create_subscription(String, "camping_robot/hazard", self.on_hazard, 10)
         self.create_subscription(String, "simple_goal/status", self.on_simple_goal, 10)
         self.create_subscription(String, "waypoint_patrol/status", self.on_patrol, 10)
+        self.create_subscription(String, "mission/task_status", self.on_task, 10)
         self.create_timer(1.0 / publish_hz, self.report)
         self.get_logger().info("Mission supervisor started")
 
@@ -84,6 +86,9 @@ class MissionSupervisor(Node):
 
     def on_patrol(self, msg):
         self.patrol_status = msg.data
+
+    def on_task(self, msg):
+        self.task_status = msg.data
 
     def report(self):
         now = self.get_clock().now()
@@ -131,6 +136,7 @@ class MissionSupervisor(Node):
             f"esp32_rssi={self.esp32_rssi}; "
             f"goal={self.simple_goal_status}; "
             f"patrol={self.patrol_status}; "
+            f"task={self.task_status}; "
             f"issues={','.join(issues)}"
         )
 

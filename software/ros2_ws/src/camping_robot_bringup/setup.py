@@ -32,6 +32,7 @@ setup(
             "lds14_udp_node = camping_robot_bringup.lds14_udp_node:main",
             "mission_supervisor = camping_robot_bringup.mission_supervisor:main",
             "mission_command_node = camping_robot_bringup.mission_command_node:main",
+            "mission_task_manager = camping_robot_bringup.mission_task_manager:main",
             "robot_health_monitor = camping_robot_bringup.robot_health_monitor:main",
             "simple_goal_follower = camping_robot_bringup.simple_goal_follower:main",
             "straight_trim_test = camping_robot_bringup.straight_trim_test:main",

@@ -29,6 +29,7 @@ level=OK; hazard=OK; camera=True; esp32_rssi=-61; goal=reached; patrol=idle; iss
 - `/camping_robot/hazard`
 - `/simple_goal/status`
 - `/waypoint_patrol/status`
+- `/mission/task_status`
 
 ## Current Use
 
@@ -111,7 +112,15 @@ Supported command status:
 - `stop`: stops the robot, pauses patrol, and turns the buzzer off
 - `alert`: stops the robot and turns the warning buzzer on
 - `reset_patrol`: resets waypoint patrol to the first waypoint
-- `delivery`, `guide`, `evacuate`: accepted but reported as `not_ready`
+- `delivery`, `guide`, `evacuate`: forwarded to `mission_task_manager`
+- `return_home`: sends the robot to the configured home location
+
+Destination missions are handled by `mission_task_manager`.
+See:
+
+```text
+docs/MISSION_TASKS.md
+```
 
 For `patrol`, launch the patrol stack, not only the simple-goal stack:
 

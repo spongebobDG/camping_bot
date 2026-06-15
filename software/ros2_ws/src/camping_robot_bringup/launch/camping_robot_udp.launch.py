@@ -7,6 +7,7 @@ from pathlib import Path
 def generate_launch_description():
     package_share = Path(get_package_share_directory("camping_robot_bringup"))
     params = str(package_share / "config" / "robot.yaml")
+    mission_locations = str(package_share / "config" / "mission_locations.yaml")
 
     return LaunchDescription(
         [
@@ -72,6 +73,13 @@ def generate_launch_description():
                 name="mission_command_node",
                 output="screen",
                 parameters=[params],
+            ),
+            Node(
+                package="camping_robot_bringup",
+                executable="mission_task_manager",
+                name="mission_task_manager",
+                output="screen",
+                parameters=[params, {"mission_locations_file": mission_locations}],
             ),
             Node(
                 package="camping_robot_bringup",
