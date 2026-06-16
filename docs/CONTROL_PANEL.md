@@ -33,9 +33,13 @@ The map panel has three modes:
 
 - `Goal`: click or drag on the map to publish `/goal_pose`
 - `Estimate`: click or drag on the map to publish `/initialpose`
+- `Move`: drag the map without sending robot commands
 - `Inspect`: view the map without sending commands
 
 Click sets the position. Drag sets both position and direction.
+
+Use the mouse wheel to zoom the map. Press `Fit` to return to the full-map
+view.
 
 The web panel reads the saved map from:
 

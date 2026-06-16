@@ -4,6 +4,7 @@ const mapCanvas = document.querySelector("#mapCanvas");
 const mapOverlay = document.querySelector("#mapOverlay");
 const mapHint = document.querySelector("#mapHint");
 const mapContext = mapCanvas.getContext("2d");
+const fitMapButton = document.querySelector("#fitMapButton");
 
 const fields = {
   mission_status: document.querySelector("#missionStatus"),
@@ -28,7 +29,11 @@ let robotPose = null;
 let goalPose = null;
 let mapMode = "goal";
 let dragStart = null;
+let panStart = null;
 let previewTarget = null;
+let viewScale = 1;
+let viewOffset = { x: 0, y: 0 };
+let mapViewInitialized = false;
 
 function setText(node, value) {
   node.textContent = value || "unknown";
@@ -107,6 +112,7 @@ async function loadMap() {
     mapImage = offscreen;
     mapInfo = data;
     mapOverlay.textContent = `${data.width}x${data.height}, ${data.resolution}m/px`;
+    fitMapToCanvas();
     resizeMapCanvas();
   } catch (error) {
     mapOverlay.textContent = `map error: ${error.message}`;
@@ -120,19 +126,27 @@ function resizeMapCanvas() {
   if (mapCanvas.width !== nextWidth || mapCanvas.height !== nextHeight) {
     mapCanvas.width = nextWidth;
     mapCanvas.height = nextHeight;
+    if (!mapViewInitialized) fitMapToCanvas();
   }
   drawMap();
 }
 
-function mapFit() {
+function fitMapToCanvas() {
   if (!mapInfo) return { scale: 1, x: 0, y: 0 };
-  const scale = Math.min(
+  viewScale = Math.min(
     mapCanvas.width / mapInfo.width,
     mapCanvas.height / mapInfo.height
   );
-  const x = (mapCanvas.width - mapInfo.width * scale) / 2;
-  const y = (mapCanvas.height - mapInfo.height * scale) / 2;
-  return { scale, x, y };
+  viewOffset = {
+    x: (mapCanvas.width - mapInfo.width * viewScale) / 2,
+    y: (mapCanvas.height - mapInfo.height * viewScale) / 2,
+  };
+  mapViewInitialized = true;
+  drawMap();
+}
+
+function mapFit() {
+  return { scale: viewScale, x: viewOffset.x, y: viewOffset.y };
 }
 
 function worldToPixel(x, y) {
@@ -160,6 +174,14 @@ function canvasToMapPixel(event) {
     return null;
   }
   return { px, py };
+}
+
+function canvasPoint(event) {
+  const rect = mapCanvas.getBoundingClientRect();
+  return {
+    x: (event.clientX - rect.left) * window.devicePixelRatio,
+    y: (event.clientY - rect.top) * window.devicePixelRatio,
+  };
 }
 
 function drawArrow(ctx, px, py, yaw, color, label) {
@@ -346,11 +368,14 @@ document.querySelectorAll("button[data-map-mode]").forEach((button) => {
     const hints = {
       goal: "Goal: click or drag on map",
       initialpose: "Estimate: click or drag robot pose",
+      move: "Move: drag map, wheel zoom",
       inspect: "Inspect: map only",
     };
     mapHint.textContent = hints[mapMode] || "";
   });
 });
+
+fitMapButton.addEventListener("click", fitMapToCanvas);
 
 document.querySelectorAll("button[data-fullscreen]").forEach((button) => {
   button.addEventListener("click", () => {
@@ -366,6 +391,11 @@ document.querySelectorAll("button[data-fullscreen]").forEach((button) => {
 
 mapCanvas.addEventListener("pointerdown", (event) => {
   if (mapMode === "inspect") return;
+  if (mapMode === "move") {
+    panStart = { point: canvasPoint(event), offset: { ...viewOffset } };
+    mapCanvas.setPointerCapture(event.pointerId);
+    return;
+  }
   dragStart = canvasToMapPixel(event);
   if (dragStart) {
     mapCanvas.setPointerCapture(event.pointerId);
@@ -373,6 +403,15 @@ mapCanvas.addEventListener("pointerdown", (event) => {
 });
 
 mapCanvas.addEventListener("pointermove", (event) => {
+  if (panStart && mapMode === "move") {
+    const point = canvasPoint(event);
+    viewOffset = {
+      x: panStart.offset.x + point.x - panStart.point.x,
+      y: panStart.offset.y + point.y - panStart.point.y,
+    };
+    drawMap();
+    return;
+  }
   if (!dragStart || mapMode === "inspect") return;
   const current = canvasToMapPixel(event);
   if (!current) return;
@@ -381,12 +420,33 @@ mapCanvas.addEventListener("pointermove", (event) => {
 });
 
 mapCanvas.addEventListener("pointerup", async (event) => {
+  if (panStart && mapMode === "move") {
+    panStart = null;
+    return;
+  }
   if (!dragStart || mapMode === "inspect") return;
   const end = canvasToMapPixel(event) || dragStart;
   const target = targetFromDrag(dragStart, end);
   dragStart = null;
   previewTarget = null;
   await sendMapTarget(target);
+});
+
+mapCanvas.addEventListener("wheel", (event) => {
+  if (!mapInfo) return;
+  event.preventDefault();
+  const point = canvasPoint(event);
+  const before = {
+    px: (point.x - viewOffset.x) / viewScale,
+    py: (point.y - viewOffset.y) / viewScale,
+  };
+  const zoom = event.deltaY < 0 ? 1.15 : 1 / 1.15;
+  viewScale = Math.max(0.05, Math.min(20, viewScale * zoom));
+  viewOffset = {
+    x: point.x - before.px * viewScale,
+    y: point.y - before.py * viewScale,
+  };
+  drawMap();
 });
 
 window.addEventListener("resize", resizeMapCanvas);

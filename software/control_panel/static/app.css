@@ -135,7 +135,7 @@ h2 {
 }
 
 .segmented {
-  grid-template-columns: repeat(3, minmax(0, 88px));
+  grid-template-columns: repeat(4, minmax(0, 78px));
 }
 
 .control-tabs {
