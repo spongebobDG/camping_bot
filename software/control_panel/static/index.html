@@ -8,85 +8,126 @@
   </head>
   <body>
     <main class="shell">
-      <section class="camera-panel">
+      <section id="mapPanel" class="map-panel">
         <div class="topbar">
           <div>
             <p class="eyebrow">Camping Bot</p>
-            <h1>Mission Control</h1>
+            <h1>Map Control</h1>
           </div>
-          <div id="levelPill" class="pill">UNKNOWN</div>
+          <div class="top-actions">
+            <div id="levelPill" class="pill">UNKNOWN</div>
+            <button class="icon-button" data-fullscreen="mapPanel">Full</button>
+          </div>
         </div>
-        <img id="cameraStream" alt="camera stream" />
+
+        <div class="map-toolbar">
+          <div class="segmented" aria-label="map command mode">
+            <button class="mode-button active" data-map-mode="goal">Goal</button>
+            <button class="mode-button" data-map-mode="initialpose">Estimate</button>
+            <button class="mode-button" data-map-mode="inspect">Inspect</button>
+          </div>
+          <div id="mapHint" class="map-hint">Goal: click or drag on map</div>
+        </div>
+
+        <div class="map-stage">
+          <canvas id="mapCanvas"></canvas>
+          <div id="mapOverlay" class="map-overlay">loading map</div>
+        </div>
       </section>
 
-      <section class="side-panel">
-        <div class="card">
+      <section class="side-panel" aria-label="robot controls">
+        <div class="card status-card">
           <h2>Status</h2>
           <dl class="status-grid">
-            <dt>Mission</dt>
-            <dd id="missionStatus">loading</dd>
-            <dt>Mode</dt>
-            <dd id="modeStatus">loading</dd>
-            <dt>Task</dt>
-            <dd id="taskStatus">loading</dd>
             <dt>Hazard</dt>
             <dd id="hazardStatus">loading</dd>
-            <dt>Camera</dt>
-            <dd id="cameraStatus">loading</dd>
-            <dt>Assist</dt>
-            <dd id="assistStatus">loading</dd>
-            <dt>Elevator</dt>
-            <dd id="elevatorStatus">loading</dd>
+            <dt>Battery</dt>
+            <dd id="batteryStatus">loading</dd>
+            <dt>Pose</dt>
+            <dd id="poseStatus">waiting</dd>
           </dl>
         </div>
 
-        <div class="card">
-          <h2>Missions</h2>
-          <div class="button-grid">
+        <div class="card action-card">
+          <h2>Quick</h2>
+          <div class="button-grid compact">
             <button data-command="patrol">Patrol</button>
-            <button data-command="delivery">Delivery</button>
-            <button data-command="guide">Guide</button>
-            <button data-command="evacuate">Evacuate</button>
-            <button data-command="elevator">Elevator</button>
             <button data-command="return_home">Home</button>
-            <button data-command="next">Next</button>
-          </div>
-        </div>
-
-        <div class="card emergency">
-          <h2>Safety</h2>
-          <div class="button-grid">
             <button class="warn" data-command="alert">Alert</button>
             <button class="danger" data-command="stop">Stop</button>
-            <button data-command="reset_patrol">Reset Patrol</button>
           </div>
           <p id="lastAction" class="last-action">ready</p>
         </div>
 
-        <div class="card assistance">
-          <h2>Assistance</h2>
-          <p id="assistMessage" class="assist-message">no request</p>
-          <div class="button-grid">
-            <button data-decision="wait">Wait</button>
-            <button data-decision="retry">Retry</button>
-            <button data-decision="next">Next</button>
-            <button data-decision="alert">Alert</button>
-            <button class="danger" data-decision="stop">Stop</button>
-          </div>
+        <div class="control-tabs" aria-label="control pages">
+          <button class="tab-button active" data-tab="mission">Mission</button>
+          <button class="tab-button" data-tab="assist">Assist</button>
+          <button class="tab-button" data-tab="elevator">Elevator</button>
+          <button class="tab-button" data-tab="details">Details</button>
         </div>
 
-        <div class="card elevator">
-          <h2>Elevator</h2>
-          <p id="elevatorMessage" class="assist-message">phase=idle</p>
-          <div class="button-grid">
-            <button data-elevator="call">Call</button>
-            <button data-elevator="entered">Entered</button>
-            <button data-elevator="floor_selected">Floor Selected</button>
-            <button data-elevator="exited">Exited</button>
-            <button data-elevator="complete">Complete</button>
-            <button class="danger" data-elevator="cancel">Cancel</button>
-          </div>
+        <div class="tab-window">
+          <section class="tab-panel active" data-panel="mission" aria-label="mission commands">
+            <div class="button-grid">
+              <button data-command="delivery">Delivery</button>
+              <button data-command="guide">Guide</button>
+              <button data-command="evacuate">Evacuate</button>
+              <button data-command="elevator">Elevator</button>
+              <button data-command="next">Next</button>
+              <button data-command="reset_patrol">Reset Patrol</button>
+            </div>
+          </section>
+
+          <section class="tab-panel" data-panel="assist" aria-label="assistance decisions">
+            <p id="assistMessage" class="assist-message">no request</p>
+            <div class="button-grid">
+              <button data-decision="wait">Wait</button>
+              <button data-decision="retry">Retry</button>
+              <button data-decision="next">Next</button>
+              <button data-decision="alert">Alert</button>
+              <button class="danger" data-decision="stop">Stop</button>
+            </div>
+          </section>
+
+          <section class="tab-panel" data-panel="elevator" aria-label="elevator decisions">
+            <p id="elevatorMessage" class="assist-message">phase=idle</p>
+            <div class="button-grid">
+              <button data-elevator="call">Call</button>
+              <button data-elevator="entered">Entered</button>
+              <button data-elevator="floor_selected">Floor Selected</button>
+              <button data-elevator="exited">Exited</button>
+              <button data-elevator="complete">Complete</button>
+              <button class="danger" data-elevator="cancel">Cancel</button>
+            </div>
+          </section>
+
+          <section class="tab-panel" data-panel="details" aria-label="detailed robot status">
+            <dl class="status-grid dense">
+              <dt>Mission</dt>
+              <dd id="missionStatus">loading</dd>
+              <dt>Mode</dt>
+              <dd id="modeStatus">loading</dd>
+              <dt>Task</dt>
+              <dd id="taskStatus">loading</dd>
+              <dt>Camera</dt>
+              <dd id="cameraStatus">loading</dd>
+              <dt>Assist</dt>
+              <dd id="assistStatus">loading</dd>
+              <dt>Elevator</dt>
+              <dd id="elevatorStatus">loading</dd>
+              <dt>Goal</dt>
+              <dd id="goalStatus">none</dd>
+            </dl>
+          </section>
         </div>
+
+        <section id="cameraPanel" class="camera-card">
+          <div class="camera-head">
+            <h2>Camera</h2>
+            <button class="icon-button" data-fullscreen="cameraPanel">Full</button>
+          </div>
+          <img id="cameraStream" alt="camera stream" />
+        </section>
       </section>
     </main>
     <script src="/app.js"></script>

@@ -15,6 +15,7 @@ class MissionSupervisor(Node):
         self.declare_parameter("camera_timeout_sec", 5.0)
         self.declare_parameter("esp32_timeout_sec", 3.0)
         self.declare_parameter("hazard_timeout_sec", 3.0)
+        self.declare_parameter("battery_required", False)
         self.declare_parameter("weak_rssi", -75)
         self.declare_parameter("esp32_reboot_warn_sec", 30.0)
         self.declare_parameter("publish_hz", 1.0)
@@ -22,6 +23,7 @@ class MissionSupervisor(Node):
         self.camera_timeout = float(self.get_parameter("camera_timeout_sec").value)
         self.esp32_timeout = float(self.get_parameter("esp32_timeout_sec").value)
         self.hazard_timeout = float(self.get_parameter("hazard_timeout_sec").value)
+        self.battery_required = bool(self.get_parameter("battery_required").value)
         self.weak_rssi = int(self.get_parameter("weak_rssi").value)
         self.esp32_reboot_warn_sec = float(
             self.get_parameter("esp32_reboot_warn_sec").value
@@ -38,6 +40,8 @@ class MissionSupervisor(Node):
         self.esp32_reboot_time = None
         self.hazard = "UNKNOWN"
         self.hazard_time = None
+        self.battery_status = "UNKNOWN"
+        self.battery_time = None
         self.simple_goal_status = "idle"
         self.patrol_status = "idle"
         self.task_status = "idle"
@@ -49,6 +53,7 @@ class MissionSupervisor(Node):
         self.create_subscription(Bool, "camera/online", self.on_camera_online, 10)
         self.create_subscription(String, "esp32/status", self.on_esp32_status, 10)
         self.create_subscription(String, "camping_robot/hazard", self.on_hazard, 10)
+        self.create_subscription(String, "battery/status", self.on_battery, 10)
         self.create_subscription(String, "simple_goal/status", self.on_simple_goal, 10)
         self.create_subscription(String, "waypoint_patrol/status", self.on_patrol, 10)
         self.create_subscription(String, "mission/task_status", self.on_task, 10)
@@ -80,6 +85,10 @@ class MissionSupervisor(Node):
     def on_hazard(self, msg):
         self.hazard = msg.data
         self.hazard_time = self.get_clock().now()
+
+    def on_battery(self, msg):
+        self.battery_status = msg.data
+        self.battery_time = self.get_clock().now()
 
     def on_simple_goal(self, msg):
         self.simple_goal_status = msg.data
@@ -126,12 +135,25 @@ class MissionSupervisor(Node):
             else:
                 level = "WARN"
 
+        battery_age = self.age(now, self.battery_time)
+        if battery_age > self.hazard_timeout:
+            if self.battery_required:
+                issues.append("BATTERY_STALE")
+                level = "WARN"
+        elif self.battery_status.startswith("CRITICAL"):
+            issues.append(self.battery_status)
+            level = "DANGER"
+        elif self.battery_status.startswith("LOW") or self.battery_status.startswith("STALE"):
+            issues.append(self.battery_status)
+            level = "WARN"
+
         if not issues:
             issues.append("all_systems_nominal")
 
         summary = (
             f"level={level}; "
             f"hazard={self.hazard}; "
+            f"battery={self.battery_status}; "
             f"camera={self.camera_online}; "
             f"esp32_rssi={self.esp32_rssi}; "
             f"goal={self.simple_goal_status}; "

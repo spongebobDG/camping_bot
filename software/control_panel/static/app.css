@@ -18,47 +18,62 @@
 
 body {
   margin: 0;
-  min-height: 100vh;
-  background:
-    radial-gradient(circle at 10% 0%, rgba(143, 214, 201, 0.16), transparent 32rem),
-    linear-gradient(135deg, #0d130f 0%, var(--bg) 52%, #1d2419 100%);
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background: #0d130f;
   color: var(--text);
   font-family: "Segoe UI", "Noto Sans KR", sans-serif;
 }
 
 .shell {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 380px;
-  gap: 18px;
-  min-height: 100vh;
-  padding: 18px;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 380px);
+  gap: 10px;
+  height: 100vh;
+  height: 100dvh;
+  padding: 10px;
 }
 
-.camera-panel,
-.card {
+.map-panel,
+.card,
+.camera-card,
+.tab-window {
   border: 1px solid var(--line);
-  background: rgba(24, 33, 25, 0.92);
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.34);
+  background: rgba(24, 33, 25, 0.96);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.32);
 }
 
-.camera-panel {
-  display: flex;
-  flex-direction: column;
-  min-height: calc(100vh - 36px);
+.map-panel {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  min-height: 0;
 }
 
-.topbar {
+.topbar,
+.camera-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 18px 20px;
+  min-height: 52px;
+  padding: 8px 12px;
   border-bottom: 1px solid var(--line);
 }
 
+.top-actions,
+.camera-head {
+  gap: 8px;
+}
+
+.top-actions {
+  display: flex;
+  align-items: center;
+}
+
 .eyebrow {
-  margin: 0 0 4px;
+  margin: 0 0 2px;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 12px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -71,17 +86,17 @@ h2 {
 }
 
 h1 {
-  font-size: 30px;
+  font-size: 20px;
 }
 
 h2 {
-  margin-bottom: 14px;
-  font-size: 18px;
+  margin-bottom: 8px;
+  font-size: 14px;
 }
 
 .pill {
-  min-width: 96px;
-  padding: 8px 12px;
+  min-width: 88px;
+  padding: 7px 10px;
   border: 1px solid var(--line);
   color: var(--muted);
   text-align: center;
@@ -103,29 +118,91 @@ h2 {
   color: var(--danger);
 }
 
-#cameraStream {
-  width: 100%;
-  flex: 1;
-  min-height: 360px;
-  object-fit: contain;
+.map-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 46px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.segmented,
+.control-tabs {
+  display: grid;
+  gap: 6px;
+}
+
+.segmented {
+  grid-template-columns: repeat(3, minmax(0, 88px));
+}
+
+.control-tabs {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.map-hint {
+  min-width: 0;
+  color: var(--muted);
+  overflow: hidden;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
+.map-stage {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
   background: #050806;
 }
 
+#mapCanvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+}
+
+.map-overlay {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  max-width: calc(100% - 20px);
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  background: rgba(5, 8, 6, 0.82);
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+
 .side-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
+  display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr) 150px;
+  gap: 8px;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .card {
-  padding: 18px;
+  padding: 10px;
 }
 
 .status-grid {
   display: grid;
-  grid-template-columns: 90px minmax(0, 1fr);
-  gap: 10px 12px;
+  grid-template-columns: 66px minmax(0, 1fr);
+  gap: 6px 8px;
   margin: 0;
+  font-size: 12px;
+}
+
+.status-grid.dense {
+  grid-template-columns: 68px minmax(0, 1fr);
 }
 
 dt {
@@ -134,22 +211,29 @@ dt {
 
 dd {
   margin: 0;
+  max-height: 2.8em;
+  overflow: hidden;
   overflow-wrap: anywhere;
 }
 
 .button-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: 7px;
+}
+
+.button-grid.compact {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 button {
-  min-height: 46px;
+  min-height: 33px;
   border: 1px solid #60705b;
   background: var(--panel-2);
   color: var(--text);
   font: inherit;
   font-weight: 700;
+  font-size: 12px;
   cursor: pointer;
 }
 
@@ -168,28 +252,110 @@ button.danger {
   color: var(--danger);
 }
 
+.mode-button.active,
+.tab-button.active {
+  border-color: var(--action);
+  color: var(--action);
+  background: rgba(143, 214, 201, 0.12);
+}
+
+.icon-button {
+  min-height: 30px;
+  padding: 0 10px;
+}
+
 .last-action {
-  margin: 14px 0 0;
+  min-height: 17px;
+  margin: 6px 0 0;
   color: var(--muted);
   overflow-wrap: anywhere;
+  font-size: 12px;
+}
+
+.tab-window {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.tab-panel {
+  display: none;
+  height: 100%;
+  min-height: 0;
+  padding: 10px;
+  overflow: auto;
+}
+
+.tab-panel.active {
+  display: block;
 }
 
 .assist-message {
-  min-height: 44px;
-  margin: 0 0 14px;
-  padding: 10px;
+  min-height: 32px;
+  margin: 0 0 8px;
+  padding: 8px;
   border: 1px solid var(--line);
   background: rgba(16, 22, 18, 0.72);
   color: var(--warn);
   overflow-wrap: anywhere;
+  font-size: 12px;
+}
+
+.camera-card {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+  overflow: hidden;
+}
+
+.camera-head {
+  min-height: 36px;
+  padding: 6px 8px;
+}
+
+.camera-head h2 {
+  margin: 0;
+}
+
+#cameraStream {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  object-fit: contain;
+  background: #050806;
+}
+
+:fullscreen {
+  background: #050806;
+}
+
+.map-panel:fullscreen,
+.camera-card:fullscreen {
+  width: 100vw;
+  height: 100vh;
 }
 
 @media (max-width: 960px) {
-  .shell {
-    grid-template-columns: 1fr;
+  body {
+    height: auto;
+    min-height: 100vh;
+    overflow: auto;
   }
 
-  .camera-panel {
-    min-height: 60vh;
+  .shell {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+
+  .map-panel {
+    height: 64vh;
+  }
+
+  .side-panel {
+    grid-template-rows: auto auto auto 240px 170px;
+    overflow: visible;
+  }
+
+  .button-grid.compact {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

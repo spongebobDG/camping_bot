@@ -41,6 +41,13 @@ def generate_launch_description():
             ),
             Node(
                 package="camping_robot_bringup",
+                executable="battery_monitor",
+                name="battery_monitor",
+                output="screen",
+                parameters=[params],
+            ),
+            Node(
+                package="camping_robot_bringup",
                 executable="lds14_udp_node",
                 name="lds14_udp_node",
                 output="screen",

@@ -30,6 +30,16 @@ esp32_camera_monitor:
     check_period_sec: 2.0
     stale_sec: 8.0
 
+battery_monitor:
+  ros__parameters:
+    cells: 3
+    warn_voltage: 10.8
+    critical_voltage: 9.9
+    stale_timeout_sec: 5.0
+    publish_hz: 1.0
+    esp32_status_topic: "/esp32/status"
+    voltage_topic: "/battery/voltage"
+
 robot_health_monitor:
   ros__parameters:
     imu_topic: "/imu/data_raw"
@@ -61,6 +71,7 @@ mission_supervisor:
     camera_timeout_sec: 5.0
     esp32_timeout_sec: 3.0
     hazard_timeout_sec: 3.0
+    battery_required: false
     weak_rssi: -75
     esp32_reboot_warn_sec: 30.0
     publish_hz: 1.0
@@ -155,6 +166,7 @@ straight_trim_test:
     stop_seconds: 1.0
     imu_topic: "/imu/data_raw"
 
+
 simple_goal_follower:
   ros__parameters:
     goal_topic: "/goal_pose"
@@ -195,6 +207,6 @@ simple_goal_follower:
     max_parking_cycles: 0
     parking_reverse_angular_sign: 1.0
     parking_forward_angular_sign: 1.0
-    settle_radius_m: 0.35
-    settle_yaw_tolerance_rad: 0.4
-    settle_time_sec: 0.4  
+    settle_radius_m: 0.35 ## 목표 위치에 도달한 것으로 간주되는 최대 거리
+    settle_yaw_tolerance_rad: 0.4 ## 목표 위치에 도달한 후 허용되는 최대 각도 오차
+    settle_time_sec: 0.4 ## 시간 동안 목표 위치에 머물러야 완료로 간주

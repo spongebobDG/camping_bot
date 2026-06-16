@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
+import ast
+import base64
 import json
+import math
 import os
+import re
 import subprocess
 import threading
 import time
@@ -15,6 +19,24 @@ DEFAULT_PORT = int(os.environ.get("CAMPING_PANEL_PORT", "8088"))
 CAMERA_STREAM_URL = os.environ.get(
     "CAMPING_CAMERA_STREAM_URL", "http://192.168.0.11/stream"
 )
+MAP_YAML_PATH = os.environ.get(
+    "CAMPING_MAP_YAML", "/home/spbdg/maps/camping_test_map.yaml"
+)
+
+
+POSITION_RE = re.compile(
+    r"position:\s*\n\s*x:\s*(?P<x>-?\d+(?:\.\d+)?(?:e[+-]?\d+)?)\s*\n"
+    r"\s*y:\s*(?P<y>-?\d+(?:\.\d+)?(?:e[+-]?\d+)?)\s*\n"
+    r"\s*z:\s*(?P<z>-?\d+(?:\.\d+)?(?:e[+-]?\d+)?)",
+    re.IGNORECASE,
+)
+ORIENTATION_RE = re.compile(
+    r"orientation:\s*\n\s*x:\s*(?P<x>-?\d+(?:\.\d+)?(?:e[+-]?\d+)?)\s*\n"
+    r"\s*y:\s*(?P<y>-?\d+(?:\.\d+)?(?:e[+-]?\d+)?)\s*\n"
+    r"\s*z:\s*(?P<z>-?\d+(?:\.\d+)?(?:e[+-]?\d+)?)\s*\n"
+    r"\s*w:\s*(?P<w>-?\d+(?:\.\d+)?(?:e[+-]?\d+)?)",
+    re.IGNORECASE,
+)
 
 
 class TopicCache:
@@ -28,8 +50,11 @@ class TopicCache:
             "camera_status": "unknown",
             "camera_online": "unknown",
             "hazard": "unknown",
+            "battery_status": "unknown",
             "assistance_request": "none",
             "elevator_status": "phase=idle",
+            "robot_pose": None,
+            "goal_pose": None,
             "updated_at": 0.0,
         }
 
@@ -47,6 +72,7 @@ class TopicCache:
 
 
 CACHE = TopicCache()
+MAP_CACHE = {"path": None, "mtime": None, "data": None}
 
 
 TOPICS = {
@@ -57,6 +83,7 @@ TOPICS = {
     "camera_status": ("/camera/status", "std_msgs/msg/String"),
     "camera_online": ("/camera/online", "std_msgs/msg/Bool"),
     "hazard": ("/camping_robot/hazard", "std_msgs/msg/String"),
+    "battery_status": ("/battery/status", "std_msgs/msg/String"),
     "assistance_request": ("/mission/assistance_request", "std_msgs/msg/String"),
     "elevator_status": ("/mission/elevator_status", "std_msgs/msg/String"),
 }
@@ -82,6 +109,210 @@ def extract_ros_value(output):
         if stripped.startswith("data:"):
             return stripped.split("data:", 1)[1].strip().strip("'\"")
     return output.strip()
+
+
+def parse_pose_text(output):
+    position = POSITION_RE.search(output)
+    orientation = ORIENTATION_RE.search(output)
+    if not position or not orientation:
+        return None
+
+    px = float(position.group("x"))
+    py = float(position.group("y"))
+    qx = float(orientation.group("x"))
+    qy = float(orientation.group("y"))
+    qz = float(orientation.group("z"))
+    qw = float(orientation.group("w"))
+    yaw = math.atan2(2.0 * (qw * qz + qx * qy), 1.0 - 2.0 * (qy * qy + qz * qz))
+    return {"x": px, "y": py, "yaw": yaw}
+
+
+def yaw_to_quaternion(yaw):
+    return math.sin(yaw * 0.5), math.cos(yaw * 0.5)
+
+
+def publish_goal_pose(x, y, yaw):
+    qz, qw = yaw_to_quaternion(yaw)
+    payload = (
+        "{header: {frame_id: map}, "
+        "pose: {"
+        f"position: {{x: {x:.4f}, y: {y:.4f}, z: 0.0}}, "
+        f"orientation: {{x: 0.0, y: 0.0, z: {qz:.6f}, w: {qw:.6f}}}"
+        "}}"
+    )
+    run_ros_command(
+        [
+            "ros2",
+            "topic",
+            "pub",
+            "/goal_pose",
+            "geometry_msgs/msg/PoseStamped",
+            payload,
+            "--once",
+        ],
+        timeout=5.0,
+    )
+    CACHE.set("goal_pose", {"x": x, "y": y, "yaw": yaw})
+
+
+def publish_initial_pose(x, y, yaw):
+    qz, qw = yaw_to_quaternion(yaw)
+    covariance = [0.0] * 36
+    covariance[0] = 0.25
+    covariance[7] = 0.25
+    covariance[35] = 0.06853891909122467
+    payload = (
+        "{header: {frame_id: map}, "
+        "pose: {pose: {"
+        f"position: {{x: {x:.4f}, y: {y:.4f}, z: 0.0}}, "
+        f"orientation: {{x: 0.0, y: 0.0, z: {qz:.6f}, w: {qw:.6f}}}"
+        f"}}, covariance: {covariance}}}"
+    )
+    run_ros_command(
+        [
+            "ros2",
+            "topic",
+            "pub",
+            "/initialpose",
+            "geometry_msgs/msg/PoseWithCovarianceStamped",
+            payload,
+            "--once",
+        ],
+        timeout=5.0,
+    )
+    CACHE.set("robot_pose", {"x": x, "y": y, "yaw": yaw})
+
+
+def nav_poll_worker():
+    while True:
+        try:
+            output = run_ros_command(
+                [
+                    "ros2",
+                    "topic",
+                    "echo",
+                    "/amcl_pose",
+                    "geometry_msgs/msg/PoseWithCovarianceStamped",
+                    "--once",
+                    "--no-daemon",
+                ],
+                timeout=1.8,
+            )
+            pose = parse_pose_text(output)
+            if pose:
+                CACHE.set("robot_pose", pose)
+        except Exception:
+            pass
+
+        try:
+            output = run_ros_command(
+                [
+                    "ros2",
+                    "topic",
+                    "echo",
+                    "/goal_pose",
+                    "geometry_msgs/msg/PoseStamped",
+                    "--once",
+                    "--no-daemon",
+                ],
+                timeout=0.8,
+            )
+            pose = parse_pose_text(output)
+            if pose:
+                CACHE.set("goal_pose", pose)
+        except Exception:
+            pass
+
+        time.sleep(0.4)
+
+
+def parse_map_yaml(path):
+    values = {}
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.split("#", 1)[0].strip()
+        if not line or ":" not in line:
+            continue
+        key, value = line.split(":", 1)
+        values[key.strip().lstrip("\ufeff")] = value.strip().strip("'\"")
+
+    image = values.get("image")
+    if not image:
+        raise ValueError(f"map yaml has no image: {path}")
+
+    image_path = Path(image).expanduser()
+    if not image_path.is_absolute():
+        image_path = path.parent / image_path
+
+    origin = ast.literal_eval(values.get("origin", "[0, 0, 0]"))
+    return {
+        "image_path": image_path,
+        "resolution": float(values.get("resolution", "0.05")),
+        "origin": [float(origin[0]), float(origin[1]), float(origin[2])],
+        "occupied_thresh": float(values.get("occupied_thresh", "0.65")),
+        "free_thresh": float(values.get("free_thresh", "0.25")),
+    }
+
+
+def read_pgm(path):
+    with path.open("rb") as f:
+        def token():
+            data = bytearray()
+            while True:
+                ch = f.read(1)
+                if not ch:
+                    raise ValueError("unexpected end of PGM header")
+                if ch == b"#":
+                    f.readline()
+                    continue
+                if ch.isspace():
+                    continue
+                data.extend(ch)
+                break
+            while True:
+                ch = f.read(1)
+                if not ch or ch.isspace():
+                    break
+                data.extend(ch)
+            return bytes(data).decode("ascii")
+
+        magic = token()
+        if magic != "P5":
+            raise ValueError(f"unsupported map image format {magic}; expected P5 PGM")
+        width = int(token())
+        height = int(token())
+        max_value = int(token())
+        if max_value > 255:
+            raise ValueError("16-bit PGM maps are not supported")
+        pixels = f.read(width * height)
+        if len(pixels) != width * height:
+            raise ValueError("PGM pixel data is shorter than expected")
+        return width, height, pixels
+
+
+def load_map_payload():
+    yaml_path = Path(MAP_YAML_PATH).expanduser()
+    if not yaml_path.exists():
+        raise FileNotFoundError(f"map yaml not found: {yaml_path}")
+
+    mtime = yaml_path.stat().st_mtime
+    cached = MAP_CACHE["data"]
+    if MAP_CACHE["path"] == str(yaml_path) and MAP_CACHE["mtime"] == mtime and cached:
+        return cached
+
+    metadata = parse_map_yaml(yaml_path)
+    width, height, pixels = read_pgm(metadata["image_path"])
+    payload = {
+        "ok": True,
+        "yaml_path": str(yaml_path),
+        "image_path": str(metadata["image_path"]),
+        "width": width,
+        "height": height,
+        "resolution": metadata["resolution"],
+        "origin": metadata["origin"],
+        "pixels_b64": base64.b64encode(pixels).decode("ascii"),
+    }
+    MAP_CACHE.update({"path": str(yaml_path), "mtime": mtime, "data": payload})
+    return payload
 
 
 def topic_poll_worker():
@@ -152,6 +383,12 @@ class ControlPanelHandler(BaseHTTPRequestHandler):
         if path == "/api/status":
             self.write_json(CACHE.snapshot())
             return
+        if path == "/api/map":
+            try:
+                self.write_json(load_map_payload())
+            except Exception as exc:
+                self.write_json({"ok": False, "error": str(exc)}, status=404)
+            return
         if path == "/":
             self.serve_file(STATIC_DIR / "index.html", "text/html; charset=utf-8")
             return
@@ -165,13 +402,31 @@ class ControlPanelHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         path = urlparse(self.path).path
-        if path not in ("/api/mission", "/api/decision", "/api/elevator"):
+        if path not in (
+            "/api/mission",
+            "/api/decision",
+            "/api/elevator",
+            "/api/goal",
+            "/api/initialpose",
+        ):
             self.send_error(404)
             return
         length = int(self.headers.get("Content-Length", "0"))
         body = self.rfile.read(length).decode("utf-8")
         try:
             data = json.loads(body or "{}")
+            if path in ("/api/goal", "/api/initialpose"):
+                x = float(data["x"])
+                y = float(data["y"])
+                yaw = float(data.get("yaw", 0.0))
+                if path == "/api/goal":
+                    publish_goal_pose(x, y, yaw)
+                    self.write_json({"ok": True, "target": "goal", "x": x, "y": y, "yaw": yaw})
+                    return
+                publish_initial_pose(x, y, yaw)
+                self.write_json({"ok": True, "target": "initialpose", "x": x, "y": y, "yaw": yaw})
+                return
+
             if path == "/api/mission":
                 command = str(data.get("command", "")).strip().lower()
                 if command not in {
@@ -179,6 +434,7 @@ class ControlPanelHandler(BaseHTTPRequestHandler):
                     "delivery",
                     "guide",
                     "evacuate",
+                    "elevator",
                     "return_home",
                     "alert",
                     "stop",
@@ -237,9 +493,11 @@ class ControlPanelHandler(BaseHTTPRequestHandler):
 
 def main():
     threading.Thread(target=topic_poll_worker, daemon=True).start()
+    threading.Thread(target=nav_poll_worker, daemon=True).start()
     server = ThreadingHTTPServer(("0.0.0.0", DEFAULT_PORT), ControlPanelHandler)
     print(f"Camping control panel: http://localhost:{DEFAULT_PORT}")
     print(f"Camera stream: {CAMERA_STREAM_URL}")
+    print(f"Map YAML: {MAP_YAML_PATH}")
     server.serve_forever()
 
 

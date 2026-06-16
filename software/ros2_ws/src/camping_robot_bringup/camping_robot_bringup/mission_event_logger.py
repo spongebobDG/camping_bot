@@ -44,6 +44,7 @@ class MissionEventLogger(Node):
         self.create_subscription(String, "mission/assistance_request", self.on_string("mission/assistance_request"), 10)
         self.create_subscription(String, "mission/elevator_status", self.on_string("mission/elevator_status"), 10)
         self.create_subscription(String, "camping_robot/hazard", self.on_string("camping_robot/hazard"), 10)
+        self.create_subscription(String, "battery/status", self.on_string("battery/status"), 10)
         self.create_subscription(String, "esp32/status", self.on_string("esp32/status"), 10)
         self.create_subscription(String, "camera/status", self.on_string("camera/status"), 10)
         self.create_subscription(Twist, "cmd_vel_executed", self.on_cmd, 10)

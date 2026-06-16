@@ -23,6 +23,7 @@ setup(
     entry_points={
         "console_scripts": [
             "ackermann_udp_bridge = camping_robot_bringup.ackermann_udp_bridge:main",
+            "battery_monitor = camping_robot_bringup.battery_monitor:main",
             "cmd_vel_odom = camping_robot_bringup.cmd_vel_odom:main",
             "drive_smoke_test = camping_robot_bringup.drive_smoke_test:main",
             "elevator_assist_node = camping_robot_bringup.elevator_assist_node:main",

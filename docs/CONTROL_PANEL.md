@@ -1,13 +1,51 @@
 # Control Panel
 
-The control panel is a small local web UI for the camping robot.
+The control panel is a local web UI for the camping robot.
 
 It shows:
 
+- saved map
+- robot pose from AMCL
+- latest goal pose
 - ESP32-S3 camera stream
 - mission status
 - hazard state
+- battery state
 - current patrol/task state
+- elevator assist state
+
+The layout is map-first. RViz is still useful for debugging, but normal field
+operation can use this panel to see the saved map, robot pose, and goal.
+
+The camera is intentionally small and placed under the controls. The map is the
+main view.
+
+Extra commands live in the right-side tab window:
+
+- `Mission`
+- `Assist`
+- `Elevator`
+- `Details`
+
+## Map Controls
+
+The map panel has three modes:
+
+- `Goal`: click or drag on the map to publish `/goal_pose`
+- `Estimate`: click or drag on the map to publish `/initialpose`
+- `Inspect`: view the map without sending commands
+
+Click sets the position. Drag sets both position and direction.
+
+The web panel reads the saved map from:
+
+```bash
+export CAMPING_MAP_YAML=/home/spbdg/maps/camping_test_map.yaml
+```
+
+If this variable is not set, that same path is used as the default.
+
+The map and camera panels each have a `Full` button for fullscreen viewing.
 
 It can send:
 
@@ -63,6 +101,12 @@ Change camera stream URL:
 
 ```bash
 export CAMPING_CAMERA_STREAM_URL=http://192.168.0.11/stream
+```
+
+Change saved map:
+
+```bash
+export CAMPING_MAP_YAML=/home/spbdg/maps/camping_test_map.yaml
 ```
 
 ## Notes
